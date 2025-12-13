@@ -1,0 +1,17 @@
+{
+    "name": "board-project",
+    "version": "1.0.0",
+    "description": "Full-stack board application",
+    "scripts": {
+        "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+        "dev:server": "cd server && npm run start:dev",
+        "dev:client": "cd client && npm run dev"
+    },
+    "devDependencies": {
+        "concurrently": "^9.0.0"
+    },
+    "dependencies": {
+        "@opentelemetry/api": "^1.9.0",
+        "@opentelemetry/sdk-node": "^0.208.0"
+    }
+}

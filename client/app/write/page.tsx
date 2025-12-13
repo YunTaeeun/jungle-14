@@ -1,0 +1,102 @@
+"use client";
+
+import Navigation from "@/components/Navigation";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+export default function WritePage() {
+    const router = useRouter();
+    const [title, setTitle] = useState("");
+    const [content, setContent] = useState("");
+    const [loading, setLoading] = useState(false);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!title || !content) {
+            alert("제목과 내용을 입력해주세요.");
+            return;
+        }
+
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert("로그인이 필요합니다.");
+            router.push('/login');
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const res = await fetch("http://localhost:3000/posts", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
+                },
+                body: JSON.stringify({ title, content }),
+            });
+
+            if (!res.ok) {
+                if (res.status === 401) {
+                    alert("로그인이 필요합니다.");
+                    router.push('/login');
+                    return;
+                }
+                throw new Error("Failed to create post");
+            }
+
+            alert("게시물이 작성되었습니다!");
+            router.push("/"); // 메인 페이지로 이동
+        } catch (error) {
+            console.error("Error creating post:", error);
+            alert("게시물 작성에 실패했습니다.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="min-h-screen bg-white">
+            <Navigation />
+
+            <main className="max-w-4xl mx-auto px-6 py-12">
+                <form onSubmit={handleSubmit} className="space-y-8">
+                    {/* 제목 입력 */}
+                    <div>
+                        <input
+                            type="text"
+                            placeholder="제목"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            className="w-full text-3xl border-none outline-none focus:outline-none placeholder-gray-300 text-gray-900"
+                        />
+                    </div>
+
+                    <div className="h-px bg-gray-200"></div>
+
+                    {/* 내용 입력 + 제출 버튼 */}
+                    <div className="space-y-8">
+                        <textarea
+                            placeholder="내용을 입력하세요"
+                            value={content}
+                            onChange={(e) => setContent(e.target.value)}
+                            rows={15}
+                            className="w-full resize-none border-none outline-none focus:outline-none placeholder-gray-300 text-gray-900 leading-relaxed"
+                        />
+
+                        <div className="flex justify-end">
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="px-8 py-3 bg-gray-900 text-white hover:bg-gray-700 transition-colors disabled:bg-gray-400"
+                            >
+                                {loading ? "작성 중..." : "작성"}
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </main>
+        </div>
+    );
+}
