@@ -7,6 +7,7 @@ async function getPosts(): Promise<Post[]> {
   try {
     const res = await fetch('http://localhost:3000/posts', {
       cache: 'no-store', // 항상 최신 데이터
+      credentials: 'include', // 쿠키 전송
     });
 
     if (!res.ok) {

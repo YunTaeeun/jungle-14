@@ -21,31 +21,14 @@ export class PostsController {
   }
 
   @Get(':id')
-  async findOne(
-    @Param('id') id: string,
-    @Req() req: ExpressRequest,
-    @Res({ passthrough: true }) res: Response
-  ) {
-    const postId = +id;
-    const post = await this.postsService.findOne(postId);
+  async findOne(@Param('id') id: string) {
+    return this.postsService.findOne(+id);
+  }
 
-    // 쿠키에서 조회한 게시물 목록 가져오기
-    const viewedPosts = req.cookies['viewed_posts'] ? JSON.parse(req.cookies['viewed_posts']) : {};
-    const now = Date.now();
-
-    // 10분(600,000ms) 이내에 조회한 적이 없으면 조회수 증가
-    if (!viewedPosts[postId] || now - viewedPosts[postId] > 600000) {
-      await this.postsService.incrementViewCount(postId);
-      viewedPosts[postId] = now;
-
-      // 쿠키 업데이트 (10분 후 만료)
-      res.cookie('viewed_posts', JSON.stringify(viewedPosts), {
-        maxAge: 600000, // 10분
-        httpOnly: true,
-      });
-    }
-
-    return post;
+  @Post(':id/view')
+  async incrementView(@Param('id') id: string) {
+    await this.postsService.incrementViewCount(+id);
+    return { success: true };
   }
 
   @Patch(':id')

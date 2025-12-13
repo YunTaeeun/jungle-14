@@ -8,6 +8,7 @@ NestJS + Next.js를 사용한 풀스택 게시판 애플리케이션
 - **NestJS** - Node.js 프레임워크
 - **TypeORM** - ORM
 - **PostgreSQL** - 데이터베이스 (Docker)
+- **Redis** - 캐싱 시스템 (Docker)
 - **JWT** - 인증/인가
 - **bcrypt** - 비밀번호 해싱
 - **Passport** - 인증 미들웨어
@@ -33,6 +34,7 @@ NestJS + Next.js를 사용한 풀스택 게시판 애플리케이션
 - 본인 게시물만 수정/삭제 가능 (권한 체크)
 - User와 ManyToOne 관계
 - 작성자 정보 표시 (nickname 우선)
+- **조회수** - localStorage 기반 중복 방지 (10분)
 
 ### 👤 사용자 관리
 - 프로필 조회
@@ -44,6 +46,15 @@ NestJS + Next.js를 사용한 풀스택 게시판 애플리케이션
 - **Repository 패턴** - DB 접근 로직 분리
 - **Service 레이어** - 비즈니스 로직만 처리
 - **HTTP Logging Interceptor** - 모든 요청/응답 로깅
+
+### ⚡ 성능 최적화
+- **Redis 캐싱**
+  - 게시물 목록: 1분
+  - 게시물 상세: 5분
+  - 캐시 무효화: 생성/수정/삭제 시
+- **응답 시간**
+  - 캐시 히트: 0.1-2ms
+  - DB 조회: 5-25ms
 
 ### 🎨 UI/UX
 - 미니멀 디자인
@@ -134,7 +145,19 @@ DB_PASSWORD=postgres
 DB_DATABASE=jungle_board
 ```
 
-### 4. 서버 실행
+### 4. Redis 설정 (Docker)
+
+**Redis 실행**:
+```bash
+docker run --name jungle-redis -p 6379:6379 -d redis:7
+```
+
+**자동 재시작 설정**:
+```bash
+docker update --restart=unless-stopped jungle-redis
+```
+
+### 5. 서버 실행
 
 ```bash
 # Backend (포트 3000) - Docker 자동 시작
@@ -146,7 +169,7 @@ cd client
 npm run dev
 ```
 
-### 5. 접속
+### 6. 접속
 
 - **Frontend**: http://localhost:3001
 - **Backend API**: http://localhost:3000
@@ -168,6 +191,7 @@ npm run dev
 - `GET /posts` - 전체 조회
 - `GET /posts/:id` - 단일 조회
 - `POST /posts` - 생성 (인증 필요)
+- `POST /posts/:id/view` - 조회수 증가
 - `PATCH /posts/:id` - 수정 (본인만)
 - `DELETE /posts/:id` - 삭제 (본인만)
 
@@ -205,6 +229,7 @@ docker exec -it jungle-postgres psql -U postgres -d jungle_board
 - `id` - Primary Key
 - `title`
 - `content`
+- `viewCount` - 조회수 (기본값 0)
 - `author` - User와 ManyToOne 관계
 - `createdAt`
 - `updatedAt`
@@ -243,7 +268,7 @@ Controller → Service → Repository → TypeORM → PostgreSQL
 - [ ] 댓글 기능 (CommentsModule 활성화)
 - [ ] 페이지네이션 (무한 스크롤 or 페이지 번호)
 - [ ] 검색 기능 (제목/내용/작성자)
-- [ ] 조회수 기능
+- [x] ~~조회수 기능~~ ✅ 완료
 
 ### 🎨 UX 개선
 - [ ] 이미지 업로드 (게시물 첨부)
@@ -262,7 +287,7 @@ Controller → Service → Repository → TypeORM → PostgreSQL
 - [ ] Rate Limiting (API 요청 제한)
 
 ### 🚀 성능
-- [ ] Redis 캐싱
+- [x] ~~Redis 캐싱~~ ✅ 완료
 - [ ] 이미지 최적화 (Next.js Image)
 - [ ] 코드 스플리팅
 
@@ -295,6 +320,8 @@ MIT
 - JWT 인증/인가 시스템
 - Repository 패턴
 - PostgreSQL 마이그레이션
+- **Redis 캐싱** (목록 1분, 상세 5분)
+- **조회수 기능** (localStorage 중복 방지)
 - Docker 자동화
 - TypeScript 타입 안정성
 - HTTP 로깅 시스템

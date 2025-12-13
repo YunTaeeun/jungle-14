@@ -11,7 +11,7 @@ import type { Cache } from 'cache-manager';
 export class PostsService {
   constructor(
     private readonly postsRepository: PostsRepository,
-    @Inject(CACHE_MANAGER) private cacheManager: Cache, // Redis 캐시 매니저 주입
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly usersRepository: UsersRepository,
   ) { }
 
@@ -20,12 +20,12 @@ export class PostsService {
     // 1. Redis 캐시에서 먼저 확인
     const cached = await this.cacheManager.get<Post[]>('posts');
     if (cached) {
-      console.log('캐시 히트!'); // 캐시에서 가져옴 (0.1ms)
+      console.log('✅ 목록 캐시 히트!');
       return cached;
     }
 
     // 2. 캐시에 없으면 DB 조회
-    console.log('DB 조회'); // DB에서 가져옴 (5ms)
+    console.log('💾 DB 조회');
     const posts = await this.postsRepository.findAll();
 
     // 3. 조회한 데이터를 캐시에 저장 (1분)
@@ -60,10 +60,11 @@ export class PostsService {
     // 1. 캐시 확인
     const cached = await this.cacheManager.get<Post>(`post:${id}`);
     if (cached) {
-      console.log(`게시물 ${id} 캐시 히트!`);
+      console.log(`✅ 게시물 ${id} 캐시 히트!`);
       return cached;
     }
     // 2. DB 조회
+    console.log(`💾 게시물 ${id} DB 조회`);
     const post = await this.postsRepository.findById(id);
 
     if (!post) {

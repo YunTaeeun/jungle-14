@@ -14,6 +14,7 @@ export interface Post {
     author: User;
     createdAt: Date | string;
     updatedAt: Date | string;
+    viewCount: number;
 }
 
 export interface LoginResponse {

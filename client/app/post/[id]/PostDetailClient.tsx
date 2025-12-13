@@ -15,7 +15,24 @@ export default function PostDetailClient({ post }: { post: any }) {
             const currentUser = JSON.parse(userStr);
             setIsAuthor(currentUser.id === post.author?.id);
         }
-    }, [post.author?.id]);
+
+        // 조회수 증가 (로컬스토리지로 중복 체크)
+        const viewedPostsStr = localStorage.getItem('viewed_posts');
+        const viewedPosts = viewedPostsStr ? JSON.parse(viewedPostsStr) : {};
+        const now = Date.now();
+        const lastViewed = viewedPosts[post.id];
+
+        // 10분(600,000ms) 이내에 조회한 적이 없으면 조회수 증가
+        if (!lastViewed || now - lastViewed > 600000) {
+            fetch(`http://localhost:3000/posts/${post.id}/view`, {
+                method: 'POST',
+                credentials: 'include',
+            }).catch(err => console.error('조회수 증가 실패:', err));
+
+            viewedPosts[post.id] = now;
+            localStorage.setItem('viewed_posts', JSON.stringify(viewedPosts));
+        }
+    }, [post.id, post.author?.id]);
 
     const handleDelete = async () => {
         if (!confirm('정말 삭제하시겠습니까?')) return;
