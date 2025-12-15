@@ -27,13 +27,13 @@
 
 ### 기술 아키텍처 (Tech Stack)
 
-| Layer        | Tech           | Key Libraries                          |
-| :----------- | :------------- | :------------------------------------- |
-| **Frontend** | **Next.js 16** | React 19, TailwindCSS v4, Lucide Icons |
-| **Backend**  | **NestJS 10**  | **Prisma**, Passport, CacheManager     |
-| **Database** | **PostgreSQL** | Prisma Client, pg                      |
-| **Cache**    | **Redis**      | cache-manager-redis-yet                |
-| **Infra**    | **Docker**     | PostgreSQL, Redis                      |
+| Layer        | Tech           | Key Libraries                                                         |
+| :----------- | :------------- | :-------------------------------------------------------------------- |
+| **Frontend** | **Next.js 16** | React 19, TailwindCSS v4, Lucide Icons, **TipTap (Rich Text Editor)** |
+| **Backend**  | **NestJS 10**  | **Prisma**, Passport, CacheManager                                    |
+| **Database** | **PostgreSQL** | Prisma Client, pg                                                     |
+| **Cache**    | **Redis**      | cache-manager-redis-yet                                               |
+| **Infra**    | **Docker**     | PostgreSQL, Redis                                                     |
 
 ### 디렉토리 맵 (Directory Map)
 
@@ -51,6 +51,7 @@ jungle 14/
 │   │   └── 📄 page.tsx ................... Main: 무한 스크롤 게시물 목록
 │   └── 📂 components/
 │       ├── 📄 Navigation.tsx ............. GNB: 로그인 상태 감지
+│       ├── 📄 RichEditor.tsx ............. TipTap 기반 Rich Text Editor
 │       ├── 📄 CommentSection.tsx ......... 댓글 CRUD 컴포넌트
 │       ├── 📄 InfiniteScrollPosts.tsx .... 무한 스크롤 구현
 │       └── 📄 SearchBar.tsx .............. 검색 입력 컴포넌트
@@ -257,6 +258,65 @@ Next.js App Router 구조를 따릅니다.
 *   **`SearchBar.tsx`**
     *   **역할**: 검색 입력 컴포넌트.
     *   **기능**: 검색 타입 선택 (제목/내용/작성자) + 검색어 입력 → `/search` 페이지로 이동
+
+*   **`RichEditor.tsx`**
+    *   **역할**: TipTap 기반 Rich Text Editor 컴포넌트.
+    *   **주요 기능**:
+        - **한글 폰트 10종 지원**: 산하엽, 마루부리, 구름산스 등
+        - **폰트 크기 조절**: 12px ~ 32px (8단계)
+        - **텍스트 정렬**: 좌/중/우 정렬
+        - **볼드 스타일**: 굵은 글씨 적용
+        - **실시간 동기화**: 드롭다운이 현재 선택된 스타일 반영
+    *   **기술 스택**:
+        - `@tiptap/react` - React용 TipTap
+        - `@tiptap/starter-kit` - 기본 에디터 기능
+        - `@tiptap/extension-text-align` - 텍스트 정렬
+        - `@tiptap/extension-text-style` - 텍스트 스타일
+        - `@tiptap/extension-font-family` - 폰트 패밀리
+    *   **핵심 구현**:
+        ```typescript
+        // 커스텀 FontSize Extension
+        const FontSize = Extension.create({
+          name: 'fontSize',
+          addGlobalAttributes() {
+            return [{
+              types: ['textStyle'],
+              attributes: {
+                fontSize: {
+                  parseHTML: (element) => element.style.fontSize || null,
+                  renderHTML: (attrs) => ({ style: `font-size: ${attrs.fontSize}` }),
+                },
+              },
+            }];
+          },
+        });
+        
+        // 상태 동기화
+        onUpdate: ({ editor }) => {
+          const attrs = editor.getAttributes('textStyle');
+          setSelectedFont(attrs.fontFamily || '');
+          setSelectedSize(attrs.fontSize || '');
+        }
+        ```
+    *   **접근성**:
+        - 모든 도구에 `aria-label` 추가
+        - 버튼에 `aria-pressed` 상태 표시
+        - 키보드 내비게이션 지원
+    *   **XSS 방어** (write/page.tsx):
+        ```typescript
+        // Client-side only DOMPurify 로딩
+        useEffect(() => {
+          import('dompurify').then((module) => {
+            setDOMPurify(module.default);
+          });
+        }, []);
+        
+        // HTML Sanitization
+        const sanitizedContent = DOMPurify.sanitize(content, {
+          ALLOWED_TAGS: ['p', 'br', 'b', 'strong', 'span', ...],
+          ALLOWED_ATTR: ['style'],
+        });
+        ```
 
 ---
 

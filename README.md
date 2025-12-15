@@ -18,6 +18,7 @@ NestJS + Next.js를 사용한 풀스택 게시판 애플리케이션
 - **React 19**
 - **TypeScript**
 - **Tailwind CSS v4**
+- **TipTap** - Rich Text Editor (w/ Korean Font Support)
 
 ---
 
@@ -31,12 +32,14 @@ NestJS + Next.js를 사용한 풀스택 게시판 애플리케이션
 
 ### 📝 게시물 관리
 - CRUD (생성, 조회, 수정, 삭제)
+- **Rich Text Editor** - TipTap 기반, 한글 폰트 10종 지원
 - 본인 게시물만 수정/삭제 가능 (권한 체크)
 - User와 관계 설정
 - 작성자 정보 표시 (nickname 우선)
 - **조회수** - localStorage 기반 중복 방지 (10분)
 - **페이지네이션** - 무한 스크롤
 - **검색** - 제목/내용/작성자 검색
+- **XSS 방어** - DOMPurify를 통한 HTML Sanitization
 
 ### 💬 댓글 시스템
 - 댓글 CRUD
@@ -71,11 +74,13 @@ NestJS + Next.js를 사용한 풀스택 게시판 애플리케이션
 
 ### 🎨 UI/UX
 - 미니멀 디자인
+- **Rich Text Editor** (폰트 선택, 크기 조절, 정렬, 볼드)
 - 반응형 레이아웃
 - 로그인 상태별 네비게이션
 - 그리드 게시물 목록
 - 무한 스크롤 페이지네이션
 - 실시간 검색
+- **접근성 (A11y)** - aria-label, aria-pressed 지원
 
 ---
 
@@ -95,6 +100,7 @@ NestJS + Next.js를 사용한 풀스택 게시판 애플리케이션
 │   │   └── search/        # 검색 결과
 │   ├── components/
 │   │   ├── Navigation.tsx
+│   │   ├── RichEditor.tsx  # TipTap 에디터
 │   │   ├── CommentSection.tsx
 │   │   ├── InfiniteScrollPosts.tsx
 │   │   └── SearchBar.tsx
@@ -314,6 +320,14 @@ Controller → Service → Prisma Client → PostgreSQL
 ### ✅ 구현 완료
 - [x] JWT 인증/인가
 - [x] 게시물 CRUD
+- [x] **Rich Text Editor (TipTap)** ✅
+  - [x] 한글 폰트 10종 지원
+  - [x] 폰트 크기 조절 (8단계)
+  - [x] 텍스트 정렬 (좌/중/우)
+  - [x] 볼드 스타일
+  - [x] SSR 호환 (Next.js)
+  - [x] XSS 방어 (DOMPurify)
+  - [x] 접근성 (Accessibility)
 - [x] 조회수 기능
 - [x] **댓글 시스템** ✅
 - [x] **페이지네이션 (무한 스크롤)** ✅

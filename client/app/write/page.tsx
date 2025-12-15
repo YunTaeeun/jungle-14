@@ -2,16 +2,26 @@
 
 import Navigation from "@/components/Navigation";
 import RichEditor from "@/components/RichEditor";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { CornerDownLeft } from "lucide-react";
-import DOMPurify from 'dompurify';
+
+// API URL from environment variable
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 export default function WritePage() {
     const router = useRouter();
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
     const [loading, setLoading] = useState(false);
+    const [DOMPurify, setDOMPurify] = useState<any>(null);
+
+    // Load DOMPurify only on client-side
+    useEffect(() => {
+        import('dompurify').then((module) => {
+            setDOMPurify(module.default);
+        });
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -32,12 +42,17 @@ export default function WritePage() {
 
         try {
             // DOMPurify로 HTML sanitize (XSS 방어)
+            if (!DOMPurify) {
+                alert("에디터가 아직 로드 중입니다. 잠시 후 다시 시도해주세요.");
+                return;
+            }
+
             const sanitizedContent = DOMPurify.sanitize(content, {
                 ALLOWED_TAGS: ['p', 'br', 'b', 'strong', 'i', 'em', 'u', 'span', 'div', 'h1', 'h2', 'h3', 'ul', 'ol', 'li'],
                 ALLOWED_ATTR: ['style'],
             });
 
-            const res = await fetch("http://localhost:3000/posts", {
+            const res = await fetch(`${API_URL}/posts`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -55,14 +70,23 @@ export default function WritePage() {
                     router.push('/login');
                     return;
                 }
-                throw new Error("Failed to create post");
+
+                // 상세한 에러 메시지
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.message || `서버 오류 (${res.status})`);
             }
 
             alert("게시물이 작성되었습니다!");
             router.push("/");
         } catch (error) {
             console.error("Error creating post:", error);
-            alert("게시물 작성에 실패했습니다.");
+
+            // 사용자 친화적인 에러 메시지
+            if (error instanceof TypeError && error.message.includes('fetch')) {
+                alert("네트워크 연결을 확인해주세요.");
+            } else {
+                alert(`게시물 작성에 실패했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
+            }
         } finally {
             setLoading(false);
         }
