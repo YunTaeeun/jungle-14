@@ -136,3 +136,190 @@ export class PostsService {
 ### 4.2 주의사항 (Cache Stampede)
 *   TTL이 만료되는 순간 수많은 요청이 동시에 DB로 몰리는 현상(Cache Stampede)이 발생할 수 있습니다.
 *   현재는 `cache-manager`가 기본적인 방어를 해주지만, 트래픽이 매우 높을 경우 `redis-lock` 등을 고려해야 합니다.
+
+---
+
+## 5. 📊 다이어그램 (Diagrams)
+
+### 5.1 🔄 Cache-Aside 패턴 (현재 구현)
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant NestJS
+    participant Redis
+    participant PostgreSQL
+
+    Client->>NestJS: GET /posts/1
+    
+    Note over NestJS,Redis: 1️⃣ 먼저 Redis 확인
+    NestJS->>Redis: GET "post:1"
+    
+    alt Cache Hit (캐시에 있음)
+        Redis-->>NestJS: ✅ 데이터 반환 (0.1~2ms)
+        NestJS-->>Client: 응답 (초고속)
+    else Cache Miss (캐시에 없음)
+        Redis-->>NestJS: ❌ null
+        
+        Note over NestJS,PostgreSQL: 2️⃣ DB에서 조회
+        NestJS->>PostgreSQL: SELECT * FROM posts WHERE id=1
+        PostgreSQL-->>NestJS: 📦 데이터 반환 (5~25ms)
+        
+        Note over NestJS,Redis: 3️⃣ Redis에 저장 (5분 TTL)
+        NestJS->>Redis: SET "post:1" (TTL 300s)
+        Redis-->>NestJS: OK
+        
+        NestJS-->>Client: 응답
+    end
+```
+
+### 5.2 🚨 Cache Stampede 문제 (Lock 없을 때)
+
+```mermaid
+sequenceDiagram
+    participant R1 as 요청1
+    participant R2 as 요청2
+    participant R3 as 요청3
+    participant NestJS
+    participant Redis
+    participant DB
+
+    Note over R1,R3: 캐시 만료 직후 동시 요청!
+    
+    par 동시 요청
+        R1->>NestJS: GET /posts/1
+        R2->>NestJS: GET /posts/1
+        R3->>NestJS: GET /posts/1
+    end
+    
+    par 모두 캐시 확인
+        NestJS->>Redis: GET "post:1"
+        NestJS->>Redis: GET "post:1"
+        NestJS->>Redis: GET "post:1"
+    end
+    
+    Redis-->>NestJS: ❌ null (3번)
+    
+    Note over NestJS,DB: 🚨 문제: DB에 3번 조회!
+    
+    par 모두 DB 조회
+        NestJS->>DB: SELECT *
+        NestJS->>DB: SELECT *
+        NestJS->>DB: SELECT *
+    end
+    
+    DB-->>NestJS: 데이터 (3번)
+    
+    par 모두 캐시 저장
+        NestJS->>Redis: SET
+        NestJS->>Redis: SET
+        NestJS->>Redis: SET
+    end
+```
+
+### 5.3 ✅ Redis Lock 사용 (해결책)
+
+```mermaid
+sequenceDiagram
+    participant R1 as 요청1
+    participant R2 as 요청2
+    participant R3 as 요청3
+    participant NestJS
+    participant Redis
+    participant DB
+
+    Note over R1,R3: 캐시 만료 직후 동시 요청
+    
+    par 동시 요청
+        R1->>NestJS: GET /posts/1
+        R2->>NestJS: GET /posts/1
+        R3->>NestJS: GET /posts/1
+    end
+    
+    par 모두 캐시 확인
+        NestJS->>Redis: GET "post:1"
+        NestJS->>Redis: GET "post:1"
+        NestJS->>Redis: GET "post:1"
+    end
+    
+    Redis-->>NestJS: ❌ null (3번)
+    
+    Note over NestJS,Redis: 🔒 Lock 경쟁!
+    
+    par Lock 시도
+        NestJS->>Redis: LOCK "lock:post:1"
+        NestJS->>Redis: LOCK "lock:post:1"
+        NestJS->>Redis: LOCK "lock:post:1"
+    end
+    
+    Redis-->>NestJS: ✅ OK (요청1만 획득)
+    Redis-->>NestJS: ❌ 대기 (요청2)
+    Redis-->>NestJS: ❌ 대기 (요청3)
+    
+    Note over NestJS,DB: ✅ DB 조회 1번만!
+    NestJS->>DB: SELECT * (요청1만)
+    DB-->>NestJS: 데이터
+    
+    NestJS->>Redis: SET "post:1"
+    NestJS->>Redis: UNLOCK "lock:post:1"
+    
+    Note over R2,R3: 다른 요청들은 캐시에서 조회
+    NestJS->>Redis: GET "post:1" (요청2)
+    Redis-->>NestJS: ✅ 데이터
+    
+    NestJS->>Redis: GET "post:1" (요청3)
+    Redis-->>NestJS: ✅ 데이터
+    
+    par 모두 응답
+        NestJS-->>R1: 응답
+        NestJS-->>R2: 응답
+        NestJS-->>R3: 응답
+    end
+```
+
+### 5.4 🏗️ 아키텍처 다이어그램
+
+```mermaid
+graph TB
+    subgraph "Docker 환경"
+        subgraph "노트북 하드웨어"
+            RAM["💾 RAM (16GB)<br/>Redis가 여기 저장<br/>⚡ 0.1~2ms"]
+            SSD["💿 SSD (512GB)<br/>PostgreSQL이 여기 저장<br/>🐌 5~25ms"]
+        end
+        
+        Redis["🔴 Redis Container<br/>(포트 6379)"]
+        Postgres["🐘 PostgreSQL Container<br/>(포트 5432)"]
+        
+        Redis -.실제 사용.-> RAM
+        Postgres -.실제 사용.-> SSD
+    end
+    
+    NestJS["⚙️ NestJS Server<br/>(포트 3000)"]
+    
+    NestJS -->|1. 캐시 확인| Redis
+    Redis -->|2. Miss시| NestJS
+    NestJS -->|3. DB 조회| Postgres
+    Postgres -->|4. 데이터| NestJS
+    NestJS -->|5. 캐싱| Redis
+    
+    style RAM fill:#90EE90
+    style SSD fill:#FFB6C1
+    style Redis fill:#DC143C,color:#fff
+    style Postgres fill:#336791,color:#fff
+```
+
+---
+
+## 6. 💡 결론
+
+현재 프로젝트는 **Redis Lock 없이 기본 Cache-Aside 패턴**을 사용하고 있습니다.
+
+**현재 상태**:
+- ✅ 소규모 트래픽에 적합
+- ✅ 성능 개선 효과 10배 이상
+- ⚠️ 고트래픽 시 Cache Stampede 가능
+
+**향후 개선 (프로덕션)**:
+- Redis Lock (Redlock) 구현
+- 분산 캐싱 전략
+- 캐시 워밍 (Warming) 전략

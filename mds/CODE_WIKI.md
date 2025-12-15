@@ -469,6 +469,144 @@ await this.prisma.post.update({
 
 ---
 
+## 📦 Libraries and Dependencies
+
+### Backend (`server/package.json`)
+
+#### Core Framework
+| Library                    | Version | Purpose                |
+| -------------------------- | ------- | ---------------------- |
+| `@nestjs/common`           | ^11.0.1 | NestJS 핵심 모듈       |
+| `@nestjs/core`             | ^11.0.1 | NestJS 코어            |
+| `@nestjs/platform-express` | ^11.0.1 | Express 기반 HTTP 서버 |
+
+#### Database & ORM
+| Library              | Version | Purpose                      |
+| -------------------- | ------- | ---------------------------- |
+| `@prisma/client`     | ^7.1.0  | Prisma ORM 클라이언트        |
+| `@prisma/adapter-pg` | ^7.1.0  | PostgreSQL 어댑터 (Prisma 7) |
+| `pg`                 | ^8.16.3 | PostgreSQL 드라이버          |
+| `prisma`             | ^7.1.0  | Prisma CLI (devDependencies) |
+
+#### Authentication & Security
+| Library            | Version | Purpose            |
+| ------------------ | ------- | ------------------ |
+| `@nestjs/jwt`      | ^11.0.2 | JWT 토큰 생성/검증 |
+| `@nestjs/passport` | ^11.0.5 | Passport 통합      |
+| `passport`         | ^0.7.0  | 인증 미들웨어      |
+| `passport-jwt`     | ^4.0.1  | JWT 전략           |
+| `bcrypt`           | ^6.0.0  | 비밀번호 해싱      |
+| `cookie-parser`    | ^1.4.7  | 쿠키 파싱          |
+
+#### Caching
+| Library                   | Version | Purpose             |
+| ------------------------- | ------- | ------------------- |
+| `@nestjs/cache-manager`   | ^3.0.1  | NestJS 캐시 모듈    |
+| `cache-manager`           | ^7.2.7  | 캐시 관리           |
+| `cache-manager-redis-yet` | ^5.1.5  | Redis 스토어 어댑터 |
+| `redis`                   | ^5.10.0 | Redis 클라이언트    |
+
+#### Validation & Transformation
+| Library             | Version | Purpose         |
+| ------------------- | ------- | --------------- |
+| `class-validator`   | ^0.14.3 | DTO 유효성 검사 |
+| `class-transformer` | ^0.5.1  | 객체 변환       |
+
+#### Utilities
+| Library            | Version | Purpose             |
+| ------------------ | ------- | ------------------- |
+| `rxjs`             | ^7.8.1  | Reactive Extensions |
+| `reflect-metadata` | ^0.2.2  | 메타데이터 리플렉션 |
+| `@nestjs/config`   | ^4.0.2  | 환경 변수 관리      |
+
+### Frontend (`client/package.json`)
+
+#### Core Framework
+| Library     | Version | Purpose            |
+| ----------- | ------- | ------------------ |
+| `next`      | 16.0.10 | Next.js 프레임워크 |
+| `react`     | 19.2.1  | React 라이브러리   |
+| `react-dom` | 19.2.1  | React DOM 렌더러   |
+
+#### Rich Text Editor (TipTap)
+| Library                         | Version | Purpose               |
+| ------------------------------- | ------- | --------------------- |
+| `@tiptap/react`                 | ^3.13.0 | React용 TipTap 에디터 |
+| `@tiptap/starter-kit`           | ^3.13.0 | 기본 에디터 확장      |
+| `@tiptap/extension-text-align`  | ^3.13.0 | 텍스트 정렬 기능      |
+| `@tiptap/extension-text-style`  | ^3.13.0 | 텍스트 스타일 기능    |
+| `@tiptap/extension-font-family` | ^3.13.0 | 폰트 패밀리 선택      |
+
+#### Security
+| Library     | Version | Purpose                      |
+| ----------- | ------- | ---------------------------- |
+| `dompurify` | ^3.3.1  | HTML Sanitization (XSS 방어) |
+
+#### UI Components & Icons
+| Library        | Version  | Purpose           |
+| -------------- | -------- | ----------------- |
+| `lucide-react` | ^0.561.0 | 아이콘 라이브러리 |
+
+#### Styling
+| Library                | Version | Purpose                      |
+| ---------------------- | ------- | ---------------------------- |
+| `tailwindcss`          | ^4      | Utility-first CSS 프레임워크 |
+| `@tailwindcss/postcss` | ^4      | Tailwind PostCSS 플러그인    |
+
+#### TypeScript
+| Library            | Version | Purpose             |
+| ------------------ | ------- | ------------------- |
+| `typescript`       | ^5      | TypeScript 컴파일러 |
+| `@types/node`      | ^20     | Node.js 타입 정의   |
+| `@types/react`     | ^19     | React 타입 정의     |
+| `@types/react-dom` | ^19     | React DOM 타입 정의 |
+| `@types/dompurify` | ^3.0.5  | DOMPurify 타입 정의 |
+
+---
+
+## 🔑 Key Library Decisions
+
+### 1. Prisma vs TypeORM
+**선택**: Prisma
+
+**이유**:
+- 타입 안전성 향상
+- Repository 패턴 불필요
+- 코드 27% 감소
+- 자동 타입 생성
+
+### 2. TipTap vs Quill/Draft.js
+**선택**: TipTap
+
+**이유**:
+- 모던한 API (ProseMirror 기반)
+- TypeScript 지원
+- React 19 호환
+- 확장성 (커스텀 Extension 가능)
+- SSR 지원 (`immediatelyRender: false`)
+
+### 3. cache-manager vs ioredis 직접 사용
+**선택**: cache-manager + redis
+
+**이유**:
+- NestJS 공식 통합
+- 추상화된 인터페이스
+- 스토어 교체 용이
+- TTL 자동 관리
+
+### 4. Tailwind CSS v4 vs v3
+**선택**: v4
+
+**이유**:
+- PostCSS 플러그인 간소화
+- 성능 향상
+- 최신 CSS 기능 지원
+
+---
+
 이 문서는 프로젝트의 구조 변경 시 함께 업데이트되어야 합니다.
 
-**마지막 업데이트**: Prisma 마이그레이션 완료 (2025.12.15)
+**마지막 업데이트**: 
+- Prisma 마이그레이션 완료 (2025.12.15)
+- RichEditor (TipTap) 추가 (2025.12.15)
+- Libraries 섹션 추가 (2025.12.15)
