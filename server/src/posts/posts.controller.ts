@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, Req, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, Req, Res, Query } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { SearchDto } from './dto/search.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import type { Request as ExpressRequest, Response } from 'express';
 
@@ -15,9 +16,18 @@ export class PostsController {
     return this.postsService.create(createPostDto, req.user.userId);
   }
 
+  // 검색 엔드포인트 (GET /posts/search 보다 먼저 선언)
+  @Get('search')
+  search(@Query() searchDto: SearchDto) {
+    return this.postsService.search(searchDto);
+  }
+
+  // 페이지네이션 적용 (query 파라미터로 page, limit 받음)
   @Get()
-  findAll() {
-    return this.postsService.findAll();
+  findAll(@Query('page') page?: string, @Query('limit') limit?: string) {
+    const pageNum = page ? parseInt(page) : 1;
+    const limitNum = limit ? parseInt(limit) : 10;
+    return this.postsService.findAllPaginated(pageNum, limitNum);
   }
 
   @Get(':id')

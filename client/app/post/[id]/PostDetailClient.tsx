@@ -1,6 +1,7 @@
 "use client";
 
 import Navigation from "@/components/Navigation";
+import CommentSection from "@/components/CommentSection";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -92,6 +93,9 @@ export default function PostDetailClient({ post }: { post: any }) {
                             </div>
                         )}
                     </div>
+
+                    {/* 댓글 섹션 */}
+                    <CommentSection postId={post.id} />
                 </article>
             </main>
         </div>

@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { PrismaModule } from './prisma/prisma.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { PostsModule } from './posts/posts.module';
@@ -11,16 +11,7 @@ import { redisStore } from 'cache-manager-redis-yet';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: process.env.DB_HOST || 'localhost',
-      port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 5432,
-      username: process.env.DB_USERNAME || 'postgres',
-      password: process.env.DB_PASSWORD || 'postgres',
-      database: process.env.DB_DATABASE || 'jungle_board',
-      entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: true, // 개발 환경에서만 true, 프로덕션에서는 false
-    }),
+    PrismaModule,  // PrismaModule 추가
     CacheModule.registerAsync({
       isGlobal: true,
       useFactory: async () => ({
