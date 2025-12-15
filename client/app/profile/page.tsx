@@ -24,18 +24,24 @@ export default function ProfilePage() {
                 const userRes = await fetch('http://localhost:3000/users/me', {
                     headers: { 'Authorization': `Bearer ${token}` },
                 });
+
+                if (!userRes.ok) {
+                    throw new Error('인증 실패');
+                }
+
                 const userData = await userRes.json();
                 setUser(userData);
 
                 // 전체 게시물 중 내 게시물만 필터링
-                const postsRes = await fetch('http://localhost:3000/posts');
-                const allPosts = await postsRes.json();
-                const myPosts = allPosts.filter((post: any) => post.author.id === userData.id);
+                const postsRes = await fetch('http://localhost:3000/posts?page=1&limit=100');
+                const postsData = await postsRes.json();
+                const myPosts = postsData.data.filter((post: any) => post.author.id === userData.id);
                 setPosts(myPosts);
 
                 setLoading(false);
             } catch (error) {
                 console.error(error);
+                localStorage.removeItem('token'); // 토큰 제거
                 router.push('/login');
             }
         };

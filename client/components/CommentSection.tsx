@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Trash2, Edit2, Send } from 'lucide-react';
+import { Trash2, Edit2, CornerDownLeft } from 'lucide-react';
 
 interface Comment {
     id: number;
@@ -148,7 +148,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
 
     return (
         <div className="mt-12 border-t pt-8">
-            <h2 className="text-2xl font-bold mb-6">댓글 {comments.length}개</h2>
+            <h2 className="text-lg font-bold mb-4">댓글</h2>
 
             {/* 댓글 작성 폼 */}
             <form onSubmit={handleSubmit} className="mb-8">
@@ -163,10 +163,9 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                     />
                     <button
                         type="submit"
-                        className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition flex items-center gap-2"
+                        className="px-4 py-3 bg-white border-2 border-black text-black hover:bg-gray-100 transition flex items-center"
                     >
-                        <Send size={16} />
-                        작성
+                        <CornerDownLeft size={20} />
                     </button>
                 </div>
             </form>

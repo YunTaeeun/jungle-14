@@ -162,15 +162,16 @@ export class PostsService {
   }
 
   // 조회수 증가
-  async incrementViewCount(id: number, ip: string): Promise<void> {
+  async incrementViewCount(id: number, ip: string): Promise<boolean> {
     const viewKey = `view:${ip}:${id}`;
     const alreadyViewed = await this.cacheManager.get(viewKey);
 
     if (alreadyViewed) {
       console.log(`🚫 중복 조회 차단: IP=${ip}, Post=${id}`);
-      return;
+      return false;  // 증가하지 않음
     }
 
+    // DB 업데이트
     await this.prisma.post.update({
       where: { id },
       data: {
@@ -178,7 +179,20 @@ export class PostsService {
       },
     });
 
+    // 캐시 일부 수정 (viewCount만 업데이트)
+    const cacheKey = `post:${id}`;
+    const cachedPost = await this.cacheManager.get<any>(cacheKey);
+
+    if (cachedPost) {
+      // 캐시된 게시물이 있으면 viewCount만 증가
+      cachedPost.viewCount = (cachedPost.viewCount || 0) + 1;
+      await this.cacheManager.set(cacheKey, cachedPost, 300000); // TTL 5분 유지
+      console.log(`✅ 조회수 증가 + 캐시 부분 수정: IP=${ip}, Post=${id}`);
+    } else {
+      console.log(`✅ 조회수 증가 (캐시 없음): IP=${ip}, Post=${id}`);
+    }
+
     await this.cacheManager.set(viewKey, true, 600000);
-    console.log(`✅ 조회수 증가: IP=${ip}, Post=${id}`);
+    return true;  // 증가함
   }
 }

@@ -40,6 +40,9 @@ export default function LoginPage() {
             localStorage.setItem('token', data.access_token);
             localStorage.setItem('user', JSON.stringify(data.user));
 
+            // 커스텀 이벤트 발생 (Navigation 상태 업데이트)
+            window.dispatchEvent(new Event('auth-change'));
+
             alert("로그인 성공!");
             router.push("/");
         } catch (error: any) {

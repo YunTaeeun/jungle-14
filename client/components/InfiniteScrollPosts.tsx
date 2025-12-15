@@ -80,18 +80,18 @@ export default function InfiniteScrollPosts() {
 
     return (
         <div className="space-y-6">
-            {/* 게시물 그리드 */}
+            {/* 게시물 그리드 (3개씩) */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {posts.map((post) => (
                     <Link
                         key={post.id}
                         href={`/post/${post.id}`}
-                        className="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow"
+                        className="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow h-[180px] flex flex-col"
                     >
-                        <h2 className="text-xl font-semibold mb-2 line-clamp-2">{post.title}</h2>
-                        <p className="text-gray-600 mb-4 line-clamp-3">{post.content}</p>
+                        <h2 className="text-xl font-semibold mb-2 line-clamp-1">{post.title}</h2>
+                        <p className="text-gray-600 mb-4 line-clamp-1 flex-1">{post.content}</p>
                         <div className="text-sm text-gray-500 space-y-1">
-                            <div>{post.author.nickname || post.author.username}</div>
+                            <div className="line-clamp-1">{post.author.nickname || post.author.username}</div>
                             <div className="flex justify-between">
                                 <span>{new Date(post.createdAt).toLocaleDateString('ko-KR')}</span>
                                 <span>조회 {post.viewCount}</span>
@@ -103,20 +103,15 @@ export default function InfiniteScrollPosts() {
 
             {/* 로딩 스피너 */}
             {loading && (
-                <div className="flex justify-center py-8">
-                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
+                <div className="flex justify-center py-4">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-black"></div>
                 </div>
             )}
 
             {/* Intersection Observer 타겟 */}
-            <div ref={observerTarget} className="h-20" />
+            <div ref={observerTarget} className="h-10" />
 
-            {/* 더 이상 게시물이 없을 때 */}
-            {!hasMore && posts.length > 0 && (
-                <p className="text-center text-gray-500 py-8">모든 게시물을 불러왔습니다.</p>
-            )}
-
-            {/* 게시물이 하나도 없을 때 */}
+            {/* 게시물이 하나도 없을 때만 */}
             {!loading && posts.length === 0 && (
                 <p className="text-center text-gray-500 py-12">게시물이 없습니다.</p>
             )}

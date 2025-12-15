@@ -10,15 +10,38 @@ export default function Navigation() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
 
     useEffect(() => {
-        // 로그인 상태 체크
-        const token = localStorage.getItem('token');
-        setIsLoggedIn(!!token);
+        // 로그인 상태 체크 함수
+        const checkAuth = () => {
+            const token = localStorage.getItem('token');
+            setIsLoggedIn(!!token);
+        };
+
+        // 초기 체크
+        checkAuth();
+
+        // pathname 변경 시 체크
+        checkAuth();
+
+        // storage 이벤트 리스너 (다른 탭에서 로그아웃 시)
+        window.addEventListener('storage', checkAuth);
+
+        // 커스텀 이벤트 리스너 (같은 탭에서 로그인/로그아웃 시)
+        window.addEventListener('auth-change', checkAuth);
+
+        return () => {
+            window.removeEventListener('storage', checkAuth);
+            window.removeEventListener('auth-change', checkAuth);
+        };
     }, [pathname]);
 
     const handleLogout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         setIsLoggedIn(false);
+
+        // 커스텀 이벤트 발생
+        window.dispatchEvent(new Event('auth-change'));
+
         router.push('/');
     };
 

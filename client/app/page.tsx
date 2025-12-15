@@ -9,13 +9,13 @@ export default function Home() {
     <div className="min-h-screen bg-white">
       <Navigation />
 
-      <main className="max-w-6xl mx-auto px-6 py-12">
-        {/* 검색 바 */}
-        <div className="mb-8">
+      <main className="max-w-4xl mx-auto px-6">
+        {/* 검색바 - 네비게이션 바로 아래 */}
+        <div className="py-6">
           <SearchBar />
         </div>
 
-        {/* 무한 스크롤 게시물 목록 */}
+        {/* 게시물 목록 */}
         <InfiniteScrollPosts />
       </main>
     </div>
