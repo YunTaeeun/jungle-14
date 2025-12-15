@@ -76,12 +76,28 @@ export class PostsService {
     return post;
   }
 
-  // 조회수 증가 (간단 버전)
-  async incrementViewCount(id: number): Promise<void> {
-    // DB에서 직접 조회수 증가 (간단하고 안정적)
+  // 조회수 증가 (IP 기반 중복 방지)
+  async incrementViewCount(id: number, ip: string): Promise<void> {
+    // Redis 키 생성: "view:IP주소:게시물ID"
+    const viewKey = `view:${ip}:${id}`;
+
+    // 1. Redis에서 조회 기록 확인
+    const alreadyViewed = await this.cacheManager.get(viewKey);
+
+    if (alreadyViewed) {
+      // 10분 이내에 이미 조회한 기록이 있으면 무시
+      console.log(`🚫 중복 조회 차단: IP=${ip}, Post=${id}`);
+      return;
+    }
+
+    // 2. 처음 조회 또는 10분 경과 -> 조회수 증가
     const post = await this.findOne(id);
     post.viewCount++;
     await this.postsRepository.save(post);
+
+    // 3. Redis에 조회 기록 저장 (10분 = 600초)
+    await this.cacheManager.set(viewKey, true, 600000);
+    console.log(`✅ 조회수 증가: IP=${ip}, Post=${id}, Count=${post.viewCount}`);
   }
 
   // 게시물 수정

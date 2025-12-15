@@ -4,6 +4,7 @@ node_modules/
 
 # Environment Variables
 .env
+venv/
 */.env
 .env.local
 .env.*.local
@@ -22,6 +23,7 @@ database.sqlite
 
 # Logs
 *.log
+logs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

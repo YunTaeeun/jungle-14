@@ -26,8 +26,10 @@ export class PostsController {
   }
 
   @Post(':id/view')
-  async incrementView(@Param('id') id: string) {
-    await this.postsService.incrementViewCount(+id);
+  async incrementView(@Param('id') id: string, @Req() req: ExpressRequest) {
+    // IP 주소 추출 (프록시 환경 고려)
+    const ip = req.ip || req.socket.remoteAddress || 'unknown';
+    await this.postsService.incrementViewCount(+id, ip);
     return { success: true };
   }
 
