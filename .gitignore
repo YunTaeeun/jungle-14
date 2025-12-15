@@ -15,7 +15,7 @@ dist/
 .next/
 out/
 build/
-client/public/fonts/
+# client/public/fonts/
 
 # Database
 *.sqlite

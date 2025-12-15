@@ -1,39 +1,22 @@
 "use client";
 
 import Navigation from "@/components/Navigation";
-import { useState, useRef } from "react";
+import RichEditor from "@/components/RichEditor";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CornerDownLeft, Bold, AlignLeft, AlignCenter, AlignRight } from "lucide-react";
+import { CornerDownLeft } from "lucide-react";
 import DOMPurify from 'dompurify';
-
-const FONTS = [
-    { name: '기본', value: 'inherit' },
-    { name: '국립박물관문화재단 클래식', value: 'Gungsuh' },
-    { name: 'HS봄바람체 2.1', value: 'cursive' },
-    { name: '310 안삼열2.0', value: 'fantasy' },
-    { name: '청월', value: 'serif' },
-    { name: 'Sandoll 광화문', value: 'sans-serif' },
-    { name: '타이포_소설체', value: 'monospace' },
-];
-
-const SIZES = ['12px', '14px', '16px', '18px', '20px', '24px', '28px', '32px'];
 
 export default function WritePage() {
     const router = useRouter();
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
     const [loading, setLoading] = useState(false);
-    const contentRef = useRef<HTMLDivElement>(null);
-
-    const applyStyle = (command: string, value?: string) => {
-        document.execCommand(command, false, value);
-        contentRef.current?.focus();
-    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!title || !contentRef.current?.innerHTML) {
+        if (!title || !content) {
             alert("제목과 내용을 입력해주세요.");
             return;
         }
@@ -49,8 +32,8 @@ export default function WritePage() {
 
         try {
             // DOMPurify로 HTML sanitize (XSS 방어)
-            const sanitizedContent = DOMPurify.sanitize(contentRef.current.innerHTML, {
-                ALLOWED_TAGS: ['p', 'br', 'b', 'strong', 'i', 'em', 'u', 'span', 'div'],
+            const sanitizedContent = DOMPurify.sanitize(content, {
+                ALLOWED_TAGS: ['p', 'br', 'b', 'strong', 'i', 'em', 'u', 'span', 'div', 'h1', 'h2', 'h3', 'ul', 'ol', 'li'],
                 ALLOWED_ATTR: ['style'],
             });
 
@@ -104,70 +87,8 @@ export default function WritePage() {
 
                     <div className="h-px bg-gray-400"></div>
 
-                    {/* 에디터 툴바 */}
-                    <div className="flex flex-wrap gap-2 pb-4 border-b border-gray-300">
-                        {/* 폰트 선택 */}
-                        <select
-                            onChange={(e) => applyStyle('fontName', e.target.value)}
-                            className="px-3 py-1 border border-gray-300 rounded text-sm"
-                        >
-                            {FONTS.map(font => (
-                                <option key={font.value} value={font.value}>{font.name}</option>
-                            ))}
-                        </select>
-
-                        {/* 폰트 사이즈 */}
-                        <select
-                            onChange={(e) => applyStyle('fontSize', '7')}
-                            className="px-3 py-1 border border-gray-300 rounded text-sm"
-                        >
-                            {SIZES.map(size => (
-                                <option key={size} value={size}>{size}</option>
-                            ))}
-                        </select>
-
-                        {/* 볼드 */}
-                        <button
-                            type="button"
-                            onClick={() => applyStyle('bold')}
-                            className="p-2 border border-gray-300 rounded hover:bg-gray-100"
-                        >
-                            <Bold size={18} />
-                        </button>
-
-                        {/* 정렬 */}
-                        <button
-                            type="button"
-                            onClick={() => applyStyle('justifyLeft')}
-                            className="p-2 border border-gray-300 rounded hover:bg-gray-100"
-                        >
-                            <AlignLeft size={18} />
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => applyStyle('justifyCenter')}
-                            className="p-2 border border-gray-300 rounded hover:bg-gray-100"
-                        >
-                            <AlignCenter size={18} />
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => applyStyle('justifyRight')}
-                            className="p-2 border border-gray-300 rounded hover:bg-gray-100"
-                        >
-                            <AlignRight size={18} />
-                        </button>
-                    </div>
-
-                    {/* 내용 입력 (contentEditable) */}
-                    <div
-                        ref={contentRef}
-                        contentEditable
-                        onInput={(e) => setContent(e.currentTarget.innerHTML)}
-                        className="min-h-[400px] outline-none text-gray-900 leading-relaxed"
-                        style={{ whiteSpace: 'pre-wrap' }}
-                        data-placeholder="내용을 입력하세요"
-                    />
+                    {/* 리치 에디터 */}
+                    <RichEditor content={content} onChange={setContent} />
 
                     {/* 제출 버튼 */}
                     <div className="flex justify-end pt-4">
@@ -181,13 +102,6 @@ export default function WritePage() {
                     </div>
                 </form>
             </main>
-
-            <style jsx>{`
-                [contentEditable]:empty:before {
-                    content: attr(data-placeholder);
-                    color: #9ca3af;
-                }
-            `}</style>
         </div>
     );
 }

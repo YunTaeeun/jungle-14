@@ -1,35 +1,167 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #1a1a1a;
-  --accent: #666666;
-  --light-accent: #f5f5f5;
+/* 폰트 정의 */
+@font-face {
+  font-family: 'MuseumClassic';
+  src: url('/fonts/국립박물관문화재단클래식.woff2') format('woff2');
+  font-weight: normal;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-accent: var(--accent);
-  --color-light-accent: var(--light-accent);
-  --font-dancing: var(--font-dancing);
+@font-face {
+  font-family: 'HSBombaram';
+  src: url('/fonts/HSBombaram2.1.woff2') format('woff2');
+  font-weight: normal;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: "Pretendard Variable", -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
-  line-height: 1.8;
-  letter-spacing: -0.01em;
+@font-face {
+  font-family: 'EsamanruLight';
+  src: url('/fonts/esamanru Light.woff2') format('woff2');
+  font-weight: 300;
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-family: "Pretendard Variable", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+@font-face {
+  font-family: 'EsamanruMedium';
+  src: url('/fonts/esamanru Medium.woff2') format('woff2');
+  font-weight: 500;
+}
+
+@font-face {
+  font-family: 'EsamanruBold';
+  src: url('/fonts/esamanru Bold.woff2') format('woff2');
   font-weight: 700;
-  letter-spacing: 0.03em;
+}
+
+@font-face {
+  font-family: 'Diphylleia';
+  src: url('/fonts/Diphylleia-Regular.woff2') format('woff2');
+  font-weight: normal;
+}
+
+@font-face {
+  font-family: 'MaruBuri';
+  src: url('/fonts/MaruBuri-Regular.woff2') format('woff2');
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'MaruBuri';
+  src: url('/fonts/MaruBuri-Bold.woff2') format('woff2');
+  font-weight: 700;
+}
+
+@font-face {
+  font-family: 'Orbit';
+  src: url('/fonts/Orbit-Regular.woff2') format('woff2');
+  font-weight: normal;
+}
+
+@font-face {
+  font-family: 'GoormSans';
+  src: url('/fonts/goorm-sans-regular.woff2') format('woff2');
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'GoormSans';
+  src: url('/fonts/goorm-sans-medium.woff2') format('woff2');
+  font-weight: 500;
+}
+
+@font-face {
+  font-family: 'GoormSans';
+  src: url('/fonts/goorm-sans-bold.woff2') format('woff2');
+  font-weight: 700;
+}
+
+@font-face {
+  font-family: 'NanumGothic';
+  src: url('/fonts/NanumGothic.woff2') format('woff2');
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'NanumGothic';
+  src: url('/fonts/NanumGothicBold.woff2') format('woff2');
+  font-weight: 700;
+}
+
+@font-face {
+  font-family: 'AritaBuri';
+  src: url('/fonts/AritaBuriKR-Medium.woff2') format('woff2');
+  font-weight: 500;
+}
+
+@font-face {
+  font-family: 'AritaBuri';
+  src: url('/fonts/AritaBuriKR-Bold.woff2') format('woff2');
+  font-weight: 700;
+}
+
+/* Tiptap 에디터 스타일 */
+.tiptap {
+  outline: none;
+}
+
+.tiptap p.is-editor-empty:first-child::before {
+  color: #adb5bd;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Tiptap 및 ProseMirror 폰트 렌더링 */
+.ProseMirror {
+  outline: none;
+}
+
+/* 인라인 폰트 스타일 강제 적용 */
+.ProseMirror *[style*="font-family"] {
+  font-family: inherit !important;
+}
+
+/* 각 폰트별 렌더링 */
+.ProseMirror span[style*="font-family: MuseumClassic"],
+.ProseMirror span[style*='font-family: \"MuseumClassic\"'] {
+  font-family: 'MuseumClassic', serif !important;
+}
+
+.ProseMirror span[style*="font-family: HSBombaram"],
+.ProseMirror span[style*='font-family: \"HSBombaram\"'] {
+  font-family: 'HSBombaram', sans-serif !important;
+}
+
+.ProseMirror span[style*="font-family: EsamanruMedium"],
+.ProseMirror span[style*='font-family: \"EsamanruMedium\"'] {
+  font-family: 'EsamanruMedium', sans-serif !important;
+}
+
+.ProseMirror span[style*="font-family: Diphylleia"],
+.ProseMirror span[style*='font-family: \"Diphylleia\"'] {
+  font-family: 'Diphylleia', serif !important;
+}
+
+.ProseMirror span[style*="font-family: MaruBuri"],
+.ProseMirror span[style*='font-family: \"MaruBuri\"'] {
+  font-family: 'MaruBuri', sans-serif !important;
+}
+
+.ProseMirror span[style*="font-family: Orbit"],
+.ProseMirror span[style*='font-family: \"Orbit\"'] {
+  font-family: 'Orbit', sans-serif !important;
+}
+
+.ProseMirror span[style*="font-family: GoormSans"],
+.ProseMirror span[style*='font-family: \"GoormSans\"'] {
+  font-family: 'GoormSans', sans-serif !important;
+}
+
+.ProseMirror span[style*="font-family: NanumGothic"],
+.ProseMirror span[style*='font-family: \"NanumGothic\"'] {
+  font-family: 'NanumGothic', sans-serif !important;
+}
+
+.ProseMirror span[style*="font-family: AritaBuri"],
+.ProseMirror span[style*='font-family: \"AritaBuri\"'] {
+  font-family: 'AritaBuri', serif !important;
 }
