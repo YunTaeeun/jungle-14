@@ -23,8 +23,6 @@ export default function InfiniteScrollPosts() {
     const observerTarget = useRef<HTMLDivElement>(null);
 
     const fetchPosts = useCallback(async (pageNum: number) => {
-        if (loading) return;
-
         setLoading(true);
         try {
             const res = await fetch(`http://localhost:3000/posts?page=${pageNum}&limit=10`);
@@ -43,7 +41,12 @@ export default function InfiniteScrollPosts() {
         } finally {
             setLoading(false);
         }
-    }, [loading]);
+    }, []);
+
+    // 초기 로드
+    useEffect(() => {
+        fetchPosts(1);
+    }, [fetchPosts]);
 
     // Intersection Observer 설정
     useEffect(() => {
@@ -68,10 +71,12 @@ export default function InfiniteScrollPosts() {
         };
     }, [hasMore, loading]);
 
-    // 페이지 변경 시 데이터 로드
+    // 페이지 변경 시 데이터 로드 (첫 페이지 제외)
     useEffect(() => {
-        fetchPosts(page);
-    }, [page]);
+        if (page > 1) {
+            fetchPosts(page);
+        }
+    }, [page, fetchPosts]);
 
     return (
         <div className="space-y-6">
