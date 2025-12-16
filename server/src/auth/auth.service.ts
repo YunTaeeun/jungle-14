@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { RegisterDto } from './dto/register.dto';
@@ -7,6 +7,8 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
+    private readonly logger = new Logger(AuthService.name);
+
     constructor(
         private usersService: UsersService,
         private jwtService: JwtService,
@@ -17,11 +19,13 @@ export class AuthService {
         // 중복 체크
         const existingUser = await this.usersService.findByUsername(registerDto.username);
         if (existingUser) {
+            this.logger.warn(`Registration failed: Username already exists - ${registerDto.username}`);
             throw new ConflictException('이미 존재하는 사용자명입니다');
         }
 
         const existingEmail = await this.usersService.findByEmail(registerDto.email);
         if (existingEmail) {
+            this.logger.warn(`Registration failed: Email already exists - ${registerDto.email}`);
             throw new ConflictException('이미 존재하는 이메일입니다');
         }
 
@@ -35,6 +39,8 @@ export class AuthService {
             password: hashedPassword,
         });
 
+        this.logger.log(`New user registered: ${user.username}`);
+
         // 비밀번호 제외하고 반환
         const { password, ...result } = user;
         return result;
@@ -45,14 +51,18 @@ export class AuthService {
         // 사용자 찾기
         const user = await this.usersService.findByUsername(loginDto.username);
         if (!user) {
+            this.logger.warn(`Login failed: User not found - ${loginDto.username}`);
             throw new UnauthorizedException('사용자명 또는 비밀번호가 올바르지 않습니다');
         }
 
         // 비밀번호 검증
         const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
         if (!isPasswordValid) {
+            this.logger.warn(`Login failed: Invalid password - ${loginDto.username}`);
             throw new UnauthorizedException('사용자명 또는 비밀번호가 올바르지 않습니다');
         }
+
+        this.logger.log(`Successful login: ${user.username}`);
 
         // JWT 토큰 발급
         const payload = { username: user.username, sub: user.id };

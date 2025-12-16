@@ -7,6 +7,7 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { SearchDto } from './dto/search.dto';
 import { PaginatedResult } from './dto/pagination.dto';
+import sanitizeHtml from 'sanitize-html';
 
 @Injectable()
 export class PostsService {
@@ -108,28 +109,44 @@ export class PostsService {
     });
 
     if (!post) {
-      throw new NotFoundException(`ID ${id}번 게시물을 찾을 수 없습니다`);
+      throw new NotFoundException('게시물을 찾을 수 없습니다');
     }
 
     await this.cacheManager.set(`post:${id}`, post, 300000);
     return post;
   }
 
-  // 생성
+  // 생성 (XSS 방지 + 캐시 race condition 수정)
   async create(createPostDto: CreatePostDto, userId: number): Promise<Post> {
+    // XSS 방지: HTML sanitize
+    const sanitizedTitle = sanitizeHtml(createPostDto.title, {
+      allowedTags: [],  // 제목은 순수 텍스트만
+      allowedAttributes: {}
+    });
+
+    const sanitizedContent = sanitizeHtml(createPostDto.content, {
+      allowedTags: ['b', 'i', 'em', 'strong', 'p', 'br', 'ul', 'ol', 'li', 'h1', 'h2', 'h3'],
+      allowedAttributes: {
+        'a': ['href']
+      }
+    });
+
+    // Race condition 방지: 생성 전 캐시 무효화
+    await this.cacheManager.del('posts');
+
     const post = await this.prisma.post.create({
       data: {
-        ...createPostDto,
+        title: sanitizedTitle,
+        content: sanitizedContent,
         authorId: userId,
       },
       include: { author: true },
     });
 
-    await this.cacheManager.del('posts');
     return post;
   }
 
-  // 수정
+  // 수정 (XSS 방지 + 캐시 race condition 수정)
   async update(id: number, updatePostDto: UpdatePostDto, userId: number): Promise<Post> {
     const post = await this.findOne(id);
 
@@ -137,18 +154,39 @@ export class PostsService {
       throw new ForbiddenException('본인의 게시물만 수정할 수 있습니다');
     }
 
+    // XSS 방지: HTML sanitize
+    const sanitizedData: any = { ...updatePostDto };
+
+    if (updatePostDto.title) {
+      sanitizedData.title = sanitizeHtml(updatePostDto.title, {
+        allowedTags: [],
+        allowedAttributes: {}
+      });
+    }
+
+    if (updatePostDto.content) {
+      sanitizedData.content = sanitizeHtml(updatePostDto.content, {
+        allowedTags: ['b', 'i', 'em', 'strong', 'p', 'br', 'ul', 'ol', 'li', 'h1', 'h2', 'h3'],
+        allowedAttributes: {
+          'a': ['href']
+        }
+      });
+    }
+
+    // Race condition 방지: 수정 전 캐시 무효화
+    await this.cacheManager.del('posts');
+    await this.cacheManager.del(`post:${id}`);
+
     const updated = await this.prisma.post.update({
       where: { id },
-      data: updatePostDto,
+      data: sanitizedData,
       include: { author: true },
     });
 
-    await this.cacheManager.del('posts');
-    await this.cacheManager.del(`post:${id}`);
     return updated;
   }
 
-  // 삭제
+  // 삭제 (캐시 race condition 수정)
   async remove(id: number, userId: number): Promise<void> {
     const post = await this.findOne(id);
 
@@ -156,18 +194,21 @@ export class PostsService {
       throw new ForbiddenException('본인의 게시물만 삭제할 수 있습니다');
     }
 
-    await this.prisma.post.delete({ where: { id } });
+    // Race condition 방지: 삭제 전 캐시 무효화
     await this.cacheManager.del('posts');
     await this.cacheManager.del(`post:${id}`);
+
+    await this.prisma.post.delete({ where: { id } });
   }
 
-  // 조회수 증가
-  async incrementViewCount(id: number, ip: string): Promise<boolean> {
-    const viewKey = `view:${ip}:${id}`;
+  // 조회수 증가 (조작 방지: IP + User-Agent)
+  async incrementViewCount(id: number, ip: string, userAgent: string): Promise<boolean> {
+    // User-Agent 해시값 사용 (너무 길 수 있으므로)
+    const viewKey = `view:${ip}:${userAgent.substring(0, 50)}:${id}`;
     const alreadyViewed = await this.cacheManager.get(viewKey);
 
     if (alreadyViewed) {
-      console.log(`🚫 중복 조회 차단: IP=${ip}, Post=${id}`);
+      console.log(`🚫 중복 조회 차단: IP=${ip}, UA=${userAgent.substring(0, 20)}..., Post=${id}`);
       return false;  // 증가하지 않음
     }
 
@@ -192,6 +233,7 @@ export class PostsService {
       console.log(`✅ 조회수 증가 (캐시 없음): IP=${ip}, Post=${id}`);
     }
 
+    // 10분간 같은 조합으로 중복 방지
     await this.cacheManager.set(viewKey, true, 600000);
     return true;  // 증가함
   }

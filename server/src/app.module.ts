@@ -8,6 +8,8 @@ import { PostsModule } from './posts/posts.module';
 import { CommentsModule } from './comments/comments.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-yet';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -24,12 +26,24 @@ import { redisStore } from 'cache-manager-redis-yet';
         }),
       })
     }),
+    // Rate Limiting 추가
+    ThrottlerModule.forRoot([{
+      ttl: 60000,      // 60초
+      limit: 100,      // 기본: 1분에 100회
+    }]),
     UsersModule,
     AuthModule,
     PostsModule,
     CommentsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    // Rate Limiting 전역 적용
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule { }

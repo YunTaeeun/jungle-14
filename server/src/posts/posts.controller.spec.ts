@@ -152,9 +152,9 @@ describe('PostsController', () => {
         it('should increment view count', async () => {
             service.incrementViewCount.mockResolvedValue(true);
 
-            const result = await controller.incrementViewCount('1', '127.0.0.1');
+            const result = await controller.incrementViewCount('1', '127.0.0.1', 'Mozilla/5.0');
 
-            expect(service.incrementViewCount).toHaveBeenCalledWith(1, '127.0.0.1');
+            expect(service.incrementViewCount).toHaveBeenCalledWith(1, '127.0.0.1', 'Mozilla/5.0');
             expect(result).toEqual({ success: true });
         });
 
@@ -162,7 +162,7 @@ describe('PostsController', () => {
         it('should return false if already viewed', async () => {
             service.incrementViewCount.mockResolvedValue(false);
 
-            const result = await controller.incrementViewCount('1', '127.0.0.1');
+            const result = await controller.incrementViewCount('1', '127.0.0.1', 'Mozilla/5.0');
 
             expect(result).toEqual({ success: false });
         });

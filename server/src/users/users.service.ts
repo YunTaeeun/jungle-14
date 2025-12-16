@@ -55,6 +55,14 @@ export class UsersService {
       }
     }
 
+    // 이메일 중복 체크
+    if (dto.email) {
+      const existing = await this.findByEmail(dto.email);
+      if (existing && existing.id !== userId) {
+        throw new ConflictException('이미 사용 중인 이메일입니다');
+      }
+    }
+
     // 비밀번호 해싱
     let updateData: any = { ...dto };
     if (dto.password) {

@@ -253,7 +253,7 @@ describe('PostsService', () => {
 
             // Act & Assert
             await expect(service.findOne(999)).rejects.toThrow(
-                new NotFoundException('ID 999번 게시물을 찾을 수 없습니다'),
+                new NotFoundException('게시물을 찾을 수 없습니다'),
             );
         });
     });
@@ -270,7 +270,11 @@ describe('PostsService', () => {
 
             // Assert
             expect(prismaService.post.create).toHaveBeenCalledWith({
-                data: { ...createDto, authorId: 1 },
+                data: {
+                    title: 'New Post',  // sanitized
+                    content: 'New Content',  // sanitized
+                    authorId: 1
+                },
                 include: { author: true },
             });
             expect(cacheManager.del).toHaveBeenCalledWith('posts');
@@ -355,15 +359,15 @@ describe('PostsService', () => {
             prismaService.post.update.mockResolvedValue({ ...mockPost, viewCount: 1 });
 
             // Act
-            const result = await service.incrementViewCount(1, '127.0.0.1');
+            const result = await service.incrementViewCount(1, '127.0.0.1', 'Mozilla/5.0');
 
             // Assert
-            expect(cacheManager.get).toHaveBeenCalledWith('view:127.0.0.1:1');
+            expect(cacheManager.get).toHaveBeenCalledWith('view:127.0.0.1:Mozilla/5.0:1');
             expect(prismaService.post.update).toHaveBeenCalledWith({
                 where: { id: 1 },
                 data: { viewCount: { increment: 1 } },
             });
-            expect(cacheManager.set).toHaveBeenCalledWith('view:127.0.0.1:1', true, 600000);
+            expect(cacheManager.set).toHaveBeenCalledWith('view:127.0.0.1:Mozilla/5.0:1', true, 600000);
             expect(result).toBe(true);
         });
 
@@ -373,7 +377,7 @@ describe('PostsService', () => {
             cacheManager.get.mockResolvedValue(true);
 
             // Act
-            const result = await service.incrementViewCount(1, '127.0.0.1');
+            const result = await service.incrementViewCount(1, '127.0.0.1', 'Mozilla/5.0');
 
             // Assert
             expect(prismaService.post.update).not.toHaveBeenCalled();
@@ -389,7 +393,7 @@ describe('PostsService', () => {
             prismaService.post.update.mockResolvedValue({ ...cachedPost, viewCount: 6 });
 
             // Act
-            await service.incrementViewCount(1, '127.0.0.1');
+            await service.incrementViewCount(1, '127.0.0.1', 'Mozilla/5.0');
 
             // Assert
             expect(cacheManager.set).toHaveBeenCalledWith(

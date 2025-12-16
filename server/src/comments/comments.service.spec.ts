@@ -136,7 +136,7 @@ describe('CommentsService', () => {
             // Assert
             expect(prismaService.comment.update).toHaveBeenCalledWith({
                 where: { id: 1 },
-                data: updateDto,
+                data: { content: 'Updated Content' },
                 include: { author: true },
             });
             expect(result.content).toBe('Updated Content');
@@ -149,7 +149,7 @@ describe('CommentsService', () => {
 
             // Act & Assert
             await expect(service.update(999, { content: 'Test' }, 1)).rejects.toThrow(
-                new NotFoundException(`ID 999번 댓글을 찾을 수 없습니다.`),
+                new NotFoundException('댓글을 찾을 수 없습니다'),
             );
             expect(prismaService.comment.update).not.toHaveBeenCalled();
         });
@@ -161,7 +161,7 @@ describe('CommentsService', () => {
 
             // Act & Assert
             await expect(service.update(1, { content: 'Test' }, 999)).rejects.toThrow(
-                new ForbiddenException(`본인의 댓글만 수정할 수 있습니다.`),
+                new ForbiddenException('본인의 댓글만 수정할 수 있습니다'),
             );
             expect(prismaService.comment.update).not.toHaveBeenCalled();
         });
@@ -190,7 +190,7 @@ describe('CommentsService', () => {
 
             // Act & Assert
             await expect(service.remove(999, 1)).rejects.toThrow(
-                new NotFoundException(`ID 999번 댓글을 찾을 수 없습니다.`),
+                new NotFoundException('댓글을 찾을 수 없습니다'),
             );
             expect(prismaService.comment.delete).not.toHaveBeenCalled();
         });
@@ -202,7 +202,7 @@ describe('CommentsService', () => {
 
             // Act & Assert
             await expect(service.remove(1, 999)).rejects.toThrow(
-                new ForbiddenException(`본인의 댓글만 삭제할 수 있습니다.`),
+                new ForbiddenException('본인의 댓글만 삭제할 수 있습니다'),
             );
             expect(prismaService.comment.delete).not.toHaveBeenCalled();
         });

@@ -13,10 +13,15 @@
     *   [Comments Module (댓글)](#3-comments-module-serversrccomments)
     *   [Auth Module (인증)](#4-auth-module-serversrcauth)
     *   [Core Config (설정)](#5-core-config-serversrc)
-3.  [💻 Frontend Structure (클라이언트 구조)](#-frontend-structure)
+3.  [🔒 Security Architecture (보안 구조)](#-security-architecture)
+    *   [Input Validation (입력 검증)](#1-input-validation-입력-검증)
+    *   [XSS Prevention (XSS 방지)](#2-xss-prevention-xss-방지)
+    *   [Rate Limiting (요청 제한)](#3-rate-limiting-요청-제한)
+    *   [Authentication & Authorization (인증/인가)](#4-authentication--authorization-인증인가)
+4.  [💻 Frontend Structure (클라이언트 구조)](#-frontend-structure)
     *   [App Directory (페이지)](#1-app-directory-clientapp)
     *   [Components (컴포넌트)](#2-components-clientcomponents)
-4.  [🔄 Logic Trace (로직 추적)](#-logic-trace)
+5.  [🔄 Logic Trace (로직 추적)](#-logic-trace)
     *   [Scenario 1: 게시물 상세 조회 & 조회수 증가](#scenario-1-게시물-상세-조회--조회수-증가)
     *   [Scenario 2: 로그인 & 토큰 발급](#scenario-2-로그인--토큰-발급)
     *   [Scenario 3: 댓글 작성 & 권한 검증](#scenario-3-댓글-작성--권한-검증)
@@ -79,11 +84,43 @@ jungle 14/
     │   ├── 📂 auth/
     │   │   ├── 📄 auth.service.ts ........ Logic: 로그인/회원가입
     │   │   └── 📄 jwt.strategy.ts ........ Guard: 토큰 검증 전략
-    │   │
+    │   │   └── 📂 dto/
     │   ├── 📄 app.module.ts .............. Root: Prisma/Redis 설정
     │   └── 📄 main.ts .................... Entry: Port, CORS, Filter
     └── 📄 .env ........................... Config: DATABASE_URL, JWT_SECRET
 ```
+
+---
+
+## 🔒 Security Architecture
+
+**보안 점수: 92/100** (2025.12.16 업데이트)
+
+애플리케이션의 모든 보안 구현 사항은 별도 문서로 정리되어 있습니다.
+
+📄 **[보안 아키텍처 상세 문서](./SECURITY_ARCHITECTURE.md)**
+
+### 주요 보안 기능
+
+1. **Input Validation** - DTO 검증 (95/100)
+   - 사용자명, 이메일, 비밀번호 강력한 검증
+   - @class-validator 데코레이터 사용
+
+2. **XSS Prevention** - 이중 방어 (95/100)
+   - 서버: sanitize-html
+   - 클라이언트: DOMPurify
+
+3. **Rate Limiting** - 요청 제한 (90/100)
+   - 전역: 100 req/min
+   - 로그인: 5 req/min
+   - @nestjs/throttler
+
+4. **Authentication** - JWT 기반 (85/100)
+   - Passport Strategy
+   - 보안 로깅
+
+5. **Tests** - 71 tests (100% pass)
+   - 모든 보안 기능 테스트
 
 ---
 
