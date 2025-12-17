@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { getValidToken } from "@/utils/auth";
 
 export default function Navigation() {
     const pathname = usePathname();
@@ -10,9 +11,9 @@ export default function Navigation() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
 
     useEffect(() => {
-        // 로그인 상태 체크 함수
+        // 로그인 상태 체크 함수 (토큰 만료 검사 포함)
         const checkAuth = () => {
-            const token = localStorage.getItem('token');
+            const token = getValidToken(); // 유효성 검사 포함
             setIsLoggedIn(!!token);
         };
 

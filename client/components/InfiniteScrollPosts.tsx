@@ -86,10 +86,9 @@ export default function InfiniteScrollPosts() {
                     <Link
                         key={post.id}
                         href={`/post/${post.id}`}
-                        className="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow h-[180px] flex flex-col"
+                        className="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow flex flex-col justify-between"
                     >
-                        <h2 className="text-xl font-semibold mb-2 line-clamp-1">{post.title}</h2>
-                        <p className="text-gray-600 mb-4 line-clamp-1 flex-1">{post.content}</p>
+                        <h2 className="text-xl font-semibold mb-4 line-clamp-2">{post.title}</h2>
                         <div className="text-sm text-gray-500 space-y-1">
                             <div className="line-clamp-1">{post.author.nickname || post.author.username}</div>
                             <div className="flex justify-between">

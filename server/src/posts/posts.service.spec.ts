@@ -253,7 +253,7 @@ describe('PostsService', () => {
 
             // Act & Assert
             await expect(service.findOne(999)).rejects.toThrow(
-                new NotFoundException('게시물을 찾을 수 없습니다'),
+                new NotFoundException('게시물을 찾을 수 없습니다.'),
             );
         });
     });

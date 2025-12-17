@@ -64,14 +64,17 @@ export class PostsService {
 
     let where: any = {};
 
-    if (type === 'title') {
-      where.title = { contains: query, mode: 'insensitive' };
-    } else if (type === 'content') {
-      where.content = { contains: query, mode: 'insensitive' };
-    } else if (type === 'author') {
-      where.author = {
-        username: { contains: query, mode: 'insensitive' },
-      };
+    // query가 있을 때만 검색 조건 추가
+    if (query && query.trim()) {
+      if (type === 'title') {
+        where.title = { contains: query, mode: 'insensitive' };
+      } else if (type === 'content') {
+        where.content = { contains: query, mode: 'insensitive' };
+      } else if (type === 'author') {
+        where.author = {
+          username: { contains: query, mode: 'insensitive' },
+        };
+      }
     }
 
     const [data, total] = await Promise.all([

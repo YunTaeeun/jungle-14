@@ -1,9 +1,10 @@
 "use client";
 
-import Navigation from "@/components/Navigation";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Navigation from "@/components/Navigation";
+import { setTokenWithExpiry } from "@/utils/auth";
 import type { LoginResponse } from "@/types";
 
 export default function LoginPage() {
@@ -36,8 +37,8 @@ export default function LoginPage() {
 
             const data: LoginResponse = await res.json();
 
-            // 토큰 저장
-            localStorage.setItem('token', data.access_token);
+            // 토큰 저장 (자동 만료 타이머 설정)
+            setTokenWithExpiry(data.access_token);
             localStorage.setItem('user', JSON.stringify(data.user));
 
             // 커스텀 이벤트 발생 (Navigation 상태 업데이트)

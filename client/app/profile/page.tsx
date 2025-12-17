@@ -26,10 +26,17 @@ export default function ProfilePage() {
                 });
 
                 if (!userRes.ok) {
+                    console.error('인증 실패: 토큰이 만료되었거나 유효하지 않습니다.');
                     throw new Error('인증 실패');
                 }
 
                 const userData = await userRes.json();
+
+                // 응답 데이터 검증
+                if (!userData || !userData.id) {
+                    console.error('잘못된 사용자 데이터:', userData);
+                    throw new Error('사용자 정보를 가져올 수 없습니다');
+                }
                 setUser(userData);
 
                 // 전체 게시물 중 내 게시물만 필터링
