@@ -2,7 +2,7 @@
 
 import Navigation from "@/components/Navigation";
 import RichEditor from "@/components/RichEditor";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CornerDownLeft } from "lucide-react";
 
@@ -14,14 +14,6 @@ export default function WritePage() {
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
     const [loading, setLoading] = useState(false);
-    const [DOMPurify, setDOMPurify] = useState<any>(null);
-
-    // Load DOMPurify only on client-side
-    useEffect(() => {
-        import('dompurify').then((module) => {
-            setDOMPurify(module.default);
-        });
-    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -41,15 +33,13 @@ export default function WritePage() {
         setLoading(true);
 
         try {
-            // DOMPurify로 HTML sanitize (XSS 방어)
-            if (!DOMPurify) {
-                alert("에디터가 아직 로드 중입니다. 잠시 후 다시 시도해주세요.");
-                return;
-            }
+            // DOMPurify를 inline으로 import하여 사용
+            const { default: DOMPurify } = await import('dompurify');
 
             const sanitizedContent = DOMPurify.sanitize(content, {
-                ALLOWED_TAGS: ['p', 'br', 'b', 'strong', 'i', 'em', 'u', 'span', 'div', 'h1', 'h2', 'h3', 'ul', 'ol', 'li'],
-                ALLOWED_ATTR: ['style'],
+                ALLOWED_TAGS: ['p', 'br', 'b', 'strong', 'i', 'em', 'u', 'span', 'div', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'mark', 's', 'code', 'pre'],
+                ALLOWED_ATTR: ['style', 'class'],
+                KEEP_CONTENT: true,
             });
 
             const res = await fetch(`${API_URL}/posts`, {

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, Query } from '@nestjs/common';
 import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
@@ -8,10 +8,18 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 export class CommentsController {
   constructor(private readonly commentsService: CommentsService) { }
 
-  // 특정 게시물의 댓글 목록 조회
+  // 특정 게시물의 댓글 목록 조회 (페이지네이션)
   @Get('posts/:postId/comments')
-  findAllByPost(@Param('postId') postId: string) {
-    return this.commentsService.findAllByPost(+postId);
+  findAllByPost(
+    @Param('postId') postId: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.commentsService.findAllByPost(
+      +postId,
+      page ? +page : 1,
+      limit ? +limit : 20,
+    );
   }
 
   // 댓글 작성 (로그인 필수)

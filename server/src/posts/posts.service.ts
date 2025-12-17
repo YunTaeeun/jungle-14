@@ -57,7 +57,7 @@ export class PostsService {
     };
   }
 
-  // 검색 (대소문자 무시)
+  // 검색 (대소문자 무시 + HTML 태그 제거)
   async search(searchDto: SearchDto): Promise<PaginatedResult<Post>> {
     const { query, type = 'title', page = 1, limit = 10 } = searchDto;
     const skip = (page - 1) * limit;
@@ -69,7 +69,29 @@ export class PostsService {
       if (type === 'title') {
         where.title = { contains: query, mode: 'insensitive' };
       } else if (type === 'content') {
-        where.content = { contains: query, mode: 'insensitive' };
+        // Content 검색은 전체 게시물을 가져와서 HTML 제거 후 필터링
+        // (Prisma는 regex나 함수 검색을 지원하지 않음)
+        const allPosts = await this.prisma.post.findMany({
+          include: { author: true },
+          orderBy: { createdAt: 'desc' },
+        });
+
+        // HTML 태그 제거 후 검색
+        const filteredPosts = allPosts.filter(post => {
+          const plainText = post.content.replace(/<[^>]*>/g, ''); // HTML 태그 제거
+          return plainText.toLowerCase().includes(query.toLowerCase());
+        });
+
+        // 페이지네이션 적용
+        const paginatedData = filteredPosts.slice(skip, skip + limit);
+
+        return {
+          data: paginatedData,
+          total: filteredPosts.length,
+          page,
+          limit,
+          totalPages: Math.ceil(filteredPosts.length / limit),
+        };
       } else if (type === 'author') {
         where.author = {
           username: { contains: query, mode: 'insensitive' },
@@ -128,9 +150,21 @@ export class PostsService {
     });
 
     const sanitizedContent = sanitizeHtml(createPostDto.content, {
-      allowedTags: ['b', 'i', 'em', 'strong', 'p', 'br', 'ul', 'ol', 'li', 'h1', 'h2', 'h3'],
+      allowedTags: ['b', 'i', 'em', 'strong', 'p', 'br', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'span', 'div', 'u', 'mark', 's', 'code', 'pre'],
       allowedAttributes: {
-        'a': ['href']
+        'a': ['href'],
+        'span': ['style'],
+        'div': ['style'],
+        'p': ['style']
+      },
+      allowedStyles: {
+        '*': {
+          'font-family': [/.*/],
+          'font-size': [/.*/],
+          'text-align': [/.*/],
+          'font-weight': [/.*/],
+          'color': [/.*/]
+        }
       }
     });
 
@@ -169,9 +203,21 @@ export class PostsService {
 
     if (updatePostDto.content) {
       sanitizedData.content = sanitizeHtml(updatePostDto.content, {
-        allowedTags: ['b', 'i', 'em', 'strong', 'p', 'br', 'ul', 'ol', 'li', 'h1', 'h2', 'h3'],
+        allowedTags: ['b', 'i', 'em', 'strong', 'p', 'br', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'span', 'div', 'u', 'mark', 's', 'code', 'pre'],
         allowedAttributes: {
-          'a': ['href']
+          'a': ['href'],
+          'span': ['style'],
+          'div': ['style'],
+          'p': ['style']
+        },
+        allowedStyles: {
+          '*': {
+            'font-family': [/.*/],
+            'font-size': [/.*/],
+            'text-align': [/.*/],
+            'font-weight': [/.*/],
+            'color': [/.*/]
+          }
         }
       });
     }

@@ -80,11 +80,12 @@ export default function PostDetailClient({ post }: { post: Post }) {
                         <div className="h-px bg-gray-200"></div>
 
                         <div
-                            className="text-base text-gray-700 leading-relaxed"
+                            className="text-base text-gray-700 leading-relaxed post-content"
                             dangerouslySetInnerHTML={{
                                 __html: DOMPurify.sanitize(post.content, {
-                                    ALLOWED_TAGS: ['p', 'br', 'b', 'strong', 'i', 'em', 'u', 'span', 'div'],
-                                    ALLOWED_ATTR: ['style'],
+                                    ALLOWED_TAGS: ['p', 'br', 'b', 'strong', 'i', 'em', 'u', 'span', 'div', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'mark', 's', 'code', 'pre'],
+                                    ALLOWED_ATTR: ['style', 'class'],
+                                    KEEP_CONTENT: true,
                                 })
                             }}
                         />

@@ -27,13 +27,23 @@ export default function CommentSection({ postId }: CommentSectionProps) {
     const [loading, setLoading] = useState(true);
     const [currentUserId, setCurrentUserId] = useState<number | null>(null);
 
+    // 페이지네이션 상태
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [total, setTotal] = useState(0);
+    const [hasMore, setHasMore] = useState(false);
+    const [loadingMore, setLoadingMore] = useState(false);
+
     // 현재 사용자 정보 가져오기
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (token) {
             try {
                 const payload = JSON.parse(atob(token.split('.')[1]));
-                setCurrentUserId(payload.userId);
+                console.log('JWT Payload:', payload);
+                const userId = payload.userId || payload.sub;
+                console.log('Extracted userId:', userId);
+                setCurrentUserId(userId);
             } catch (error) {
                 console.error('토큰 파싱 실패:', error);
             }
@@ -45,17 +55,33 @@ export default function CommentSection({ postId }: CommentSectionProps) {
         fetchComments();
     }, [postId]);
 
-    const fetchComments = async () => {
+    const fetchComments = async (pageNum: number = 1, append: boolean = false) => {
         try {
-            const res = await fetch(`http://localhost:3000/posts/${postId}/comments`);
+            if (append) {
+                setLoadingMore(true);
+            } else {
+                setLoading(true);
+            }
+
+            const res = await fetch(`http://localhost:3000/posts/${postId}/comments?page=${pageNum}&limit=20`);
             if (res.ok) {
                 const data = await res.json();
-                setComments(data);
+
+                if (append) {
+                    setComments(prev => [...prev, ...data.data]);
+                } else {
+                    setComments(data.data);
+                }
+
+                setTotal(data.total);
+                setTotalPages(data.totalPages);
+                setHasMore(pageNum < data.totalPages);
             }
         } catch (error) {
             console.error('댓글 로드 실패:', error);
         } finally {
             setLoading(false);
+            setLoadingMore(false);
         }
     };
 
@@ -158,12 +184,12 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                         value={newComment}
                         onChange={(e) => setNewComment(e.target.value)}
                         placeholder="댓글을 입력하세요..."
-                        className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-400"
                         maxLength={1000}
                     />
                     <button
                         type="submit"
-                        className="px-4 py-3 bg-white border-2 border-black text-black hover:bg-gray-100 transition flex items-center"
+                        className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-black hover:bg-gray-50 transition flex items-center"
                     >
                         <CornerDownLeft size={20} />
                     </button>
@@ -195,13 +221,13 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                                                 setEditingId(comment.id);
                                                 setEditContent(comment.content);
                                             }}
-                                            className="text-blue-500 hover:text-blue-700"
+                                            className="text-gray-600 hover:text-gray-900"
                                         >
                                             <Edit2 size={16} />
                                         </button>
                                         <button
                                             onClick={() => handleDelete(comment.id)}
-                                            className="text-red-500 hover:text-red-700"
+                                            className="text-gray-600 hover:text-gray-900"
                                         >
                                             <Trash2 size={16} />
                                         </button>
@@ -240,6 +266,21 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                             )}
                         </div>
                     ))
+                )}
+
+                {/* Load More 버튼 */}
+                {hasMore && !loading && (
+                    <button
+                        onClick={() => {
+                            const nextPage = page + 1;
+                            setPage(nextPage);
+                            fetchComments(nextPage, true);
+                        }}
+                        disabled={loadingMore}
+                        className="w-full mt-4 py-3 text-center text-gray-600 hover:text-gray-900 hover:bg-gray-50 border border-gray-200 rounded-lg transition disabled:opacity-50"
+                    >
+                        {loadingMore ? '로딩 중...' : `더 보기 (${comments.length} / ${total})`}
+                    </button>
                 )}
             </div>
         </div>

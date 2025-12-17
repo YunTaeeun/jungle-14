@@ -1,0 +1,14 @@
+/* 게시물 상세보기 줄바꿈 스타일 */
+.post-content p {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.post-content p:first-child {
+    margin-top: 0;
+}
+
+.post-content p:last-child {
+    margin-bottom: 0;
+}

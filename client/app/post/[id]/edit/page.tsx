@@ -1,8 +1,10 @@
 "use client";
 
 import Navigation from "@/components/Navigation";
+import RichEditor from "@/components/RichEditor";
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { CornerDownLeft } from "lucide-react";
 
 export default function EditPostPage() {
     const router = useRouter();
@@ -53,13 +55,25 @@ export default function EditPostPage() {
         setLoading(true);
 
         try {
+            // DOMPurify로 sanitize
+            const { default: DOMPurify } = await import('dompurify');
+
+            const sanitizedContent = DOMPurify.sanitize(content, {
+                ALLOWED_TAGS: ['p', 'br', 'b', 'strong', 'i', 'em', 'u', 'span', 'div', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'mark', 's', 'code', 'pre'],
+                ALLOWED_ATTR: ['style', 'class'],
+                KEEP_CONTENT: true,
+            });
+
             const res = await fetch(`http://localhost:3000/posts/${id}`, {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${token}`,
                 },
-                body: JSON.stringify({ title, content }),
+                body: JSON.stringify({
+                    title,
+                    content: sanitizedContent
+                }),
             });
 
             if (!res.ok) {
@@ -93,7 +107,7 @@ export default function EditPostPage() {
             <Navigation />
 
             <main className="max-w-4xl mx-auto px-6 py-12">
-                <form onSubmit={handleSubmit} className="space-y-8">
+                <form onSubmit={handleSubmit} className="space-y-6">
                     {/* 제목 입력 */}
                     <div>
                         <input
@@ -101,38 +115,24 @@ export default function EditPostPage() {
                             placeholder="제목"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
-                            className="w-full text-3xl border-none outline-none focus:outline-none placeholder-gray-300 text-gray-900"
+                            className="w-full text-3xl border-none outline-none placeholder-gray-500 text-gray-900"
                         />
                     </div>
 
-                    <div className="h-px bg-gray-200"></div>
+                    <div className="h-px bg-gray-400"></div>
 
-                    {/* 내용 입력 + 제출 버튼 */}
-                    <div className="space-y-8">
-                        <textarea
-                            placeholder="내용을 입력하세요"
-                            value={content}
-                            onChange={(e) => setContent(e.target.value)}
-                            rows={15}
-                            className="w-full resize-none border-none outline-none focus:outline-none placeholder-gray-300 text-gray-900 leading-relaxed"
-                        />
+                    {/* 리치 에디터 */}
+                    <RichEditor content={content} onChange={setContent} />
 
-                        <div className="flex justify-end gap-4">
-                            <button
-                                type="button"
-                                onClick={() => router.back()}
-                                className="px-8 py-3 bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"
-                            >
-                                취소
-                            </button>
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="px-8 py-3 bg-gray-900 text-white hover:bg-gray-700 transition-colors disabled:bg-gray-400"
-                            >
-                                {loading ? "수정 중..." : "수정"}
-                            </button>
-                        </div>
+                    {/* 제출 버튼 */}
+                    <div className="flex justify-end pt-4">
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="p-3 bg-black text-white hover:bg-gray-700 transition-colors disabled:bg-gray-400 flex items-center gap-2"
+                        >
+                            <CornerDownLeft size={20} />
+                        </button>
                     </div>
                 </form>
             </main>

@@ -92,7 +92,7 @@ export default function RichEditor({ content, onChange }: RichEditorProps) {
         },
         editorProps: {
             attributes: {
-                class: 'min-h-[400px] outline-none',
+                class: 'min-h-[400px] outline-none [&_p]:my-4 [&_p]:leading-relaxed',
             },
         },
     });
